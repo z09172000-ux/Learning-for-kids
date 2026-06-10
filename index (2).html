@@ -1,0 +1,551 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<title>每日單字冒險 🌍</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;700;800;900&display=swap">
+<style>
+:root{
+  --bg:#ffffff;--bg2:#f5f5f4;--bg3:#efefed;
+  --text:#1a1a18;--text2:#6b6b67;--text3:#a0a09c;
+  --border:rgba(0,0,0,0.12);--border2:rgba(0,0,0,0.22);
+  --green:#1d9e75;--green-bg:#e1f5ee;--green-dark:#085041;--green-mid:#0f6e56;
+  --orange:#d85a30;--orange-bg:#faece7;--orange-dark:#4a1b0c;
+  --blue:#185fa5;--blue-bg:#e6f1fb;--blue-dark:#042c53;
+  --radius-md:8px;--radius-lg:14px;
+}
+@media(prefers-color-scheme:dark){
+  :root{
+    --bg:#1c1c1a;--bg2:#262624;--bg3:#2e2e2c;
+    --text:#f0f0ee;--text2:#a0a09c;--text3:#6b6b67;
+    --border:rgba(255,255,255,0.1);--border2:rgba(255,255,255,0.2);
+    --green-bg:#0a3328;--green-dark:#9fe1cb;
+    --orange-bg:#3d1a0e;--orange-dark:#f5c4b3;
+    --blue-bg:#0c2440;--blue-dark:#b5d4f4;
+  }
+}
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent;}
+body{font-family:'Nunito',sans-serif;background:var(--bg3);color:var(--text);min-height:100vh;}
+.app{max-width:480px;margin:0 auto;padding:16px 14px 40px;}
+.hdr{text-align:center;margin-bottom:14px;}
+.hdr-title{font-size:22px;font-weight:900;color:var(--text);}
+.hdr-sub{font-size:12px;color:var(--text2);margin-top:3px;}
+.mascot-row{display:flex;align-items:center;gap:10px;background:var(--bg2);border-radius:var(--radius-lg);padding:11px 14px;margin-bottom:14px;border:0.5px solid var(--border);}
+.mascot-msg{font-size:13px;color:var(--text);line-height:1.55;flex:1;}
+.mascot-msg b{font-weight:900;color:var(--green);}
+.day-strip{display:flex;gap:5px;justify-content:center;margin-bottom:12px;flex-wrap:wrap;}
+.dd{width:40px;height:40px;border-radius:50%;display:flex;flex-direction:column;align-items:center;justify-content:center;font-size:10px;font-weight:900;cursor:pointer;border:2px solid transparent;transition:transform 0.12s;user-select:none;}
+.dd:active{transform:scale(0.88);}
+.dd.done{background:var(--green);color:var(--green-bg);border-color:var(--green-mid);}
+.dd.active{background:var(--orange);color:var(--orange-bg);border-color:#993c1d;box-shadow:0 0 0 3px rgba(216,90,48,0.22);}
+.dd.locked{background:var(--bg2);color:var(--text3);border-color:var(--border);}
+.dd .dn{font-size:14px;line-height:1;}
+.dd .ds{font-size:10px;line-height:1;}
+.day-title{text-align:center;font-size:15px;font-weight:900;color:var(--text);margin-bottom:10px;}
+.tab-bar{display:flex;gap:5px;margin-bottom:12px;}
+.tab{flex:1;padding:9px 2px;border-radius:10px;border:1.5px solid var(--border);background:var(--bg2);font-size:12px;font-weight:800;cursor:pointer;text-align:center;color:var(--text2);font-family:'Nunito',sans-serif;transition:background 0.1s;}
+.tab.active{background:var(--orange);border-color:#993c1d;color:#faece7;}
+.hidden{display:none;}
+
+/* 學單字 */
+.prog-row{display:flex;align-items:center;gap:8px;margin-bottom:6px;}
+.prog-wrap{flex:1;background:var(--bg2);border-radius:99px;height:8px;overflow:hidden;}
+.prog-fill{height:100%;border-radius:99px;background:var(--green);transition:width 0.4s;}
+.prog-txt{font-size:12px;color:var(--text2);white-space:nowrap;}
+.star-row{display:flex;gap:4px;justify-content:center;margin:8px 0 12px;}
+.star-i{font-size:18px;opacity:0.2;transition:opacity 0.3s,transform 0.25s;}
+.star-i.lit{opacity:1;transform:scale(1.2);}
+.word-nav{display:flex;align-items:center;gap:8px;margin-bottom:12px;}
+.nav-btn{width:46px;height:46px;border-radius:50%;border:2px solid var(--border2);background:var(--bg2);font-size:24px;cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0;font-weight:900;color:var(--text);}
+.nav-btn:active{transform:scale(0.9);}
+.nav-dots{display:flex;gap:5px;justify-content:center;flex:1;}
+.nav-dot{width:10px;height:10px;border-radius:50%;background:var(--border2);transition:background 0.2s,transform 0.2s;}
+.nav-dot.active{background:var(--orange);transform:scale(1.3);}
+.nav-dot.learned{background:var(--green);}
+.word-big-card{background:var(--bg);border:0.5px solid var(--border);border-radius:20px;padding:28px 20px;text-align:center;margin-bottom:12px;transition:border-color 0.2s,background 0.2s;}
+.word-big-card.learned{border-color:var(--green);background:var(--green-bg);}
+.word-big-em{font-size:90px;line-height:1;margin-bottom:16px;cursor:pointer;display:block;}
+.word-big-en{font-size:44px;font-weight:900;color:var(--text);line-height:1;margin-bottom:8px;}
+.word-big-zh{font-size:22px;color:var(--text2);margin-bottom:6px;}
+.word-big-ph{font-size:14px;color:var(--text3);font-family:monospace;margin-bottom:20px;}
+.word-actions{display:flex;gap:10px;justify-content:center;}
+.spk-big{padding:11px 22px;border-radius:99px;border:2px solid var(--border2);background:var(--bg2);font-size:14px;font-weight:800;cursor:pointer;font-family:'Nunito',sans-serif;color:var(--text);}
+.spk-big:active{transform:scale(0.95);}
+.chk-big{padding:11px 22px;border-radius:99px;border:2px solid var(--border2);background:var(--bg2);font-size:14px;font-weight:800;cursor:pointer;font-family:'Nunito',sans-serif;color:var(--text);transition:background 0.15s,border-color 0.15s,color 0.15s;}
+.chk-big:active{transform:scale(0.95);}
+.chk-big.on{background:var(--green);border-color:var(--green-mid);color:var(--green-bg);}
+.done-banner{background:var(--green);color:var(--green-bg);border-radius:var(--radius-lg);padding:12px;text-align:center;margin-top:8px;font-size:14px;font-weight:900;display:none;}
+.done-banner.show{display:block;}
+
+/* 連連看 */
+.slbl{font-size:10px;font-weight:900;color:var(--text2);letter-spacing:0.8px;text-transform:uppercase;margin-bottom:8px;}
+.line-score{font-size:13px;color:var(--text2);text-align:center;margin-bottom:10px;font-weight:800;}
+.line-game{position:relative;}
+.line-cols{display:grid;grid-template-columns:1fr 1fr;gap:10px;}
+.line-col{display:flex;flex-direction:column;gap:8px;}
+.line-item{height:54px;border-radius:12px;border:2px solid var(--border2);background:var(--bg);text-align:center;cursor:pointer;font-family:'Nunito',sans-serif;font-weight:800;color:var(--text);transition:border-color 0.12s,background 0.12s;font-size:13px;display:flex;align-items:center;justify-content:center;position:relative;z-index:2;user-select:none;}
+.line-item:active{transform:scale(0.95);}
+.line-item.em-item{font-size:28px;}
+.line-item.sel{border-color:var(--blue);background:var(--blue-bg);color:var(--blue-dark);}
+.line-item.matched{border-color:var(--green);background:var(--green-bg);color:var(--green-dark);opacity:0.7;cursor:default;}
+.line-item.wrong{border-color:var(--orange);background:var(--orange-bg);}
+.line-svg{position:absolute;top:0;left:0;width:100%;height:100%;pointer-events:none;z-index:1;}
+.line-ok{background:var(--green);color:var(--green-bg);border-radius:var(--radius-lg);padding:12px;text-align:center;font-size:14px;font-weight:900;margin:10px 0 8px;display:none;}
+.line-ok.show{display:block;}
+
+/* 打地鼠 */
+.mole-info{display:flex;gap:10px;align-items:stretch;margin-bottom:10px;}
+.mole-target{background:var(--bg2);border-radius:var(--radius-lg);padding:12px 16px;text-align:center;flex:1;border:0.5px solid var(--border);}
+.mole-target-em{font-size:36px;line-height:1;margin-bottom:4px;}
+.mole-target-word{font-size:17px;font-weight:900;color:var(--text);}
+.mole-target-zh{font-size:12px;color:var(--text2);margin-top:2px;}
+.mole-target-hint{font-size:11px;color:var(--text3);margin-top:4px;}
+.mole-score-box{background:var(--bg2);border-radius:var(--radius-lg);padding:12px 14px;text-align:center;min-width:72px;border:0.5px solid var(--border);display:flex;flex-direction:column;justify-content:center;}
+.mole-score-num{font-size:30px;font-weight:900;color:var(--orange);line-height:1;}
+.mole-score-lbl{font-size:11px;color:var(--text2);margin-top:3px;}
+.mole-timer{height:7px;background:var(--bg2);border-radius:99px;overflow:hidden;margin-bottom:10px;}
+.mole-timer-fill{height:100%;border-radius:99px;background:var(--orange);transition:width 0.1s linear;}
+.mole-grid{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-bottom:10px;}
+.mole-hole{background:var(--bg);border:2px solid var(--border2);border-radius:var(--radius-lg);height:90px;display:flex;flex-direction:column;align-items:center;justify-content:center;cursor:pointer;transition:transform 0.1s,background 0.15s,border-color 0.15s;user-select:none;}
+.mole-hole:active{transform:scale(0.9);}
+.mole-em{font-size:30px;line-height:1;pointer-events:none;}
+.mole-word{font-size:11px;font-weight:800;color:var(--text2);margin-top:4px;pointer-events:none;}
+.mole-hole.hit{background:var(--green-bg);border-color:var(--green);transform:scale(0.88);}
+.mole-hole.miss{background:var(--orange-bg);border-color:var(--orange);transform:scale(0.88);}
+.mole-ready{text-align:center;padding:24px 0;}
+.mole-result{background:var(--bg2);border-radius:16px;padding:20px;text-align:center;margin-bottom:10px;border:0.5px solid var(--border);}
+.mole-result-score{font-size:40px;font-weight:900;color:var(--orange);line-height:1;}
+.mole-result-msg{font-size:14px;color:var(--text2);margin-top:6px;}
+
+.gbtn{width:100%;padding:13px;border-radius:var(--radius-lg);font-size:15px;font-weight:900;border:none;cursor:pointer;font-family:'Nunito',sans-serif;margin-top:6px;}
+.gbtn:active{transform:scale(0.97);}
+.gbtn.green{background:var(--green);color:var(--green-bg);}
+.gbtn.orange{background:var(--orange);color:var(--orange-bg);}
+.gbtn.blue{background:var(--blue);color:var(--blue-bg);}
+</style>
+</head>
+<body>
+<div class="app">
+  <div class="hdr">
+    <div class="hdr-title">🌍 每日單字冒險</div>
+    <div class="hdr-sub">每天7個單字・7天完成挑戰！</div>
+  </div>
+  <div class="mascot-row">
+    <div style="font-size:38px;line-height:1">🦉</div>
+    <div class="mascot-msg" id="mascotMsg">嗨！我是奧利 Ollie！<br>今天要學什麼呢？一起出發吧！</div>
+  </div>
+  <div class="day-strip" id="dayStrip"></div>
+  <div class="day-title" id="dayTitle"></div>
+  <div class="tab-bar">
+    <button class="tab active" onclick="switchTab(0)" id="tb0">📚 學單字</button>
+    <button class="tab" onclick="switchTab(1)" id="tb1">🔗 連連看</button>
+    <button class="tab" onclick="switchTab(2)" id="tb2">🔨 打地鼠</button>
+  </div>
+
+  <!-- 學單字 -->
+  <div id="tab0">
+    <div class="prog-row">
+      <div class="prog-wrap"><div class="prog-fill" id="progBar" style="width:0%"></div></div>
+      <div class="prog-txt" id="progTxt">0 / 7</div>
+    </div>
+    <div class="star-row" id="starRow"></div>
+    <div class="word-nav">
+      <button class="nav-btn" onclick="prevWord()">‹</button>
+      <div class="nav-dots" id="navDots"></div>
+      <button class="nav-btn" onclick="nextWord()">›</button>
+    </div>
+    <div class="word-big-card" id="wordCard">
+      <span class="word-big-em" id="wEm" onclick="speakCur()"></span>
+      <div class="word-big-en" id="wEn"></div>
+      <div class="word-big-zh" id="wZh"></div>
+      <div class="word-big-ph" id="wPh"></div>
+      <div class="word-actions">
+        <button class="spk-big" onclick="speakCur()">🔊 聽發音</button>
+        <button class="chk-big" id="chkBtn" onclick="toggleCur()">✓ 學會了</button>
+      </div>
+    </div>
+    <div class="done-banner" id="doneBanner">🎉 今天7個全部學完！奧利好開心！</div>
+  </div>
+
+  <!-- 連連看 -->
+  <div id="tab1" class="hidden">
+    <div class="slbl">把圖片和英文單字連起來！</div>
+    <div class="line-score" id="lineScore">配對 0 / 7</div>
+    <div class="line-game" id="lineGame">
+      <div class="line-cols">
+        <div class="line-col" id="lineLeft"></div>
+        <div class="line-col" id="lineRight"></div>
+      </div>
+      <svg class="line-svg" id="lineSvg"></svg>
+    </div>
+    <div class="line-ok" id="lineOk">🏆 全部連完！你好棒！</div>
+    <button class="gbtn green" onclick="resetLine()">🔄 再玩一次</button>
+  </div>
+
+  <!-- 打地鼠 -->
+  <div id="tab2" class="hidden">
+    <div id="moleReady" class="mole-ready">
+      <div style="font-size:60px;margin-bottom:12px">🔨</div>
+      <div style="font-size:18px;font-weight:900;color:var(--text);margin-bottom:6px">打地鼠！</div>
+      <div style="font-size:13px;color:var(--text2);line-height:1.7;margin-bottom:20px">上面會顯示目標動物<br>看到牠就用力按下去！<br>按錯扣分喔 😜</div>
+      <button class="gbtn orange" style="max-width:200px;margin:0 auto;display:block" onclick="startMole()">▶ 開始遊戲！</button>
+    </div>
+    <div id="moleGame" class="hidden">
+      <div class="mole-info">
+        <div class="mole-target">
+          <div class="mole-target-em" id="moleTargetEm"></div>
+          <div class="mole-target-word" id="moleTargetWord"></div>
+          <div class="mole-target-zh" id="moleTargetZh"></div>
+          <div class="mole-target-hint">👆 找到牠！</div>
+        </div>
+        <div class="mole-score-box">
+          <div class="mole-score-num" id="moleScoreNum">0</div>
+          <div class="mole-score-lbl">分數</div>
+        </div>
+      </div>
+      <div class="mole-timer"><div class="mole-timer-fill" id="moleTimerFill" style="width:100%"></div></div>
+      <div class="mole-grid" id="moleGrid"></div>
+    </div>
+    <div id="moleResult" class="hidden">
+      <div class="mole-result">
+        <div style="font-size:48px;margin-bottom:8px" id="moleResultEm">🔨</div>
+        <div class="mole-result-score" id="moleResultScore"></div>
+        <div class="mole-result-msg" id="moleResultMsg"></div>
+      </div>
+      <button class="gbtn orange" onclick="resetMole()">🔄 再玩一次</button>
+    </div>
+  </div>
+</div>
+
+<script>
+const DAYS=[
+  {theme:'🌲 森林動物日',words:[
+    {en:'Bear',zh:'熊',ph:'/bɛr/',em:'🐻'},
+    {en:'Fox',zh:'狐狸',ph:'/fɒks/',em:'🦊'},
+    {en:'Deer',zh:'鹿',ph:'/dɪr/',em:'🦌'},
+    {en:'Wolf',zh:'狼',ph:'/wʊlf/',em:'🐺'},
+    {en:'Owl',zh:'貓頭鷹',ph:'/aʊl/',em:'🦉'},
+    {en:'Rabbit',zh:'兔子',ph:'/ˈræbɪt/',em:'🐰'},
+    {en:'Squirrel',zh:'松鼠',ph:'/ˈskwɪrəl/',em:'🐿️'}
+  ]},
+  {theme:'🍭 美食天地日',words:[
+    {en:'Cake',zh:'蛋糕',ph:'/keɪk/',em:'🎂'},
+    {en:'Milk',zh:'牛奶',ph:'/mɪlk/',em:'🥛'},
+    {en:'Rice',zh:'米飯',ph:'/raɪs/',em:'🍚'},
+    {en:'Bread',zh:'麵包',ph:'/brɛd/',em:'🍞'},
+    {en:'Noodle',zh:'麵條',ph:'/ˈnuːdəl/',em:'🍜'},
+    {en:'Cookie',zh:'餅乾',ph:'/ˈkʊki/',em:'🍪'},
+    {en:'Juice',zh:'果汁',ph:'/dʒuːs/',em:'🧃'}
+  ]},
+  {theme:'🚀 交通工具日',words:[
+    {en:'Car',zh:'汽車',ph:'/kɑːr/',em:'🚗'},
+    {en:'Bus',zh:'公車',ph:'/bʌs/',em:'🚌'},
+    {en:'Boat',zh:'船',ph:'/boʊt/',em:'⛵'},
+    {en:'Plane',zh:'飛機',ph:'/pleɪn/',em:'✈️'},
+    {en:'Train',zh:'火車',ph:'/treɪn/',em:'🚂'},
+    {en:'Bike',zh:'腳踏車',ph:'/baɪk/',em:'🚲'},
+    {en:'Rocket',zh:'火箭',ph:'/ˈrɒkɪt/',em:'🚀'}
+  ]},
+  {theme:'🎨 繽紛色彩日',words:[
+    {en:'Red',zh:'紅色',ph:'/rɛd/',em:'🔴'},
+    {en:'Blue',zh:'藍色',ph:'/bluː/',em:'🔵'},
+    {en:'Green',zh:'綠色',ph:'/ɡriːn/',em:'🟢'},
+    {en:'Yellow',zh:'黃色',ph:'/ˈjɛloʊ/',em:'🟡'},
+    {en:'Pink',zh:'粉紅色',ph:'/pɪŋk/',em:'🩷'},
+    {en:'Orange',zh:'橘色',ph:'/ˈɔːrɪndʒ/',em:'🟠'},
+    {en:'Purple',zh:'紫色',ph:'/ˈpɜːrpəl/',em:'🟣'}
+  ]},
+  {theme:'💭 心情感受日',words:[
+    {en:'Happy',zh:'開心',ph:'/ˈhæpi/',em:'😊'},
+    {en:'Sad',zh:'難過',ph:'/sæd/',em:'😢'},
+    {en:'Big',zh:'大的',ph:'/bɪɡ/',em:'🐘'},
+    {en:'Small',zh:'小的',ph:'/smɔːl/',em:'🐭'},
+    {en:'Hot',zh:'熱的',ph:'/hɒt/',em:'🔥'},
+    {en:'Cold',zh:'冷的',ph:'/koʊld/',em:'🧊'},
+    {en:'Fast',zh:'快的',ph:'/fæst/',em:'⚡'}
+  ]},
+  {theme:'🤸 身體部位日',words:[
+    {en:'Head',zh:'頭',ph:'/hɛd/',em:'🗣️'},
+    {en:'Eye',zh:'眼睛',ph:'/aɪ/',em:'👁️'},
+    {en:'Mouth',zh:'嘴巴',ph:'/maʊθ/',em:'👄'},
+    {en:'Hand',zh:'手',ph:'/hænd/',em:'✋'},
+    {en:'Foot',zh:'腳',ph:'/fʊt/',em:'🦶'},
+    {en:'Ear',zh:'耳朵',ph:'/ɪr/',em:'👂'},
+    {en:'Nose',zh:'鼻子',ph:'/noʊz/',em:'👃'}
+  ]},
+  {theme:'🌿 大自然日',words:[
+    {en:'Water',zh:'水',ph:'/ˈwɔːtər/',em:'💧'},
+    {en:'Flower',zh:'花',ph:'/ˈflaʊər/',em:'🌸'},
+    {en:'Sky',zh:'天空',ph:'/skaɪ/',em:'🌤️'},
+    {en:'Rain',zh:'雨',ph:'/reɪn/',em:'🌧️'},
+    {en:'Star',zh:'星星',ph:'/stɑːr/',em:'⭐'},
+    {en:'House',zh:'房子',ph:'/haʊs/',em:'🏠'},
+    {en:'Heart',zh:'心',ph:'/hɑːrt/',em:'❤️'}
+  ]}
+];
+
+const MASCOT=[
+  '嗨！我是奧利 Ollie！<br>今天要學什麼呢？一起出發吧！',
+  '好棒！繼續學吧 🌳',
+  '你真厲害！已經一半了！🌟',
+  '快完成了！再幾個就好！✨',
+  '<b>全部學完了！奧利超以你為榮！🏆</b>'
+];
+
+let curDay=0,curWord=0,curTab=0;
+let learned=DAYS.map(()=>new Array(7).fill(false));
+let lineSt={},moleInterval=null,tickInterval=null,moleActive=false,moleScore=0,moleTargetIdx=0;
+
+function speak(w){
+  if('speechSynthesis' in window){
+    speechSynthesis.cancel();
+    const u=new SpeechSynthesisUtterance(w);
+    u.lang='en-US';u.rate=0.75;
+    speechSynthesis.speak(u);
+  }
+}
+function speakCur(){speak(DAYS[curDay].words[curWord].en);}
+function lc(d){return learned[d].filter(Boolean).length;}
+
+function renderDayStrip(){
+  const s=document.getElementById('dayStrip');
+  s.innerHTML='';
+  DAYS.forEach((_,i)=>{
+    const done=lc(i)===7,active=i===curDay;
+    const d=document.createElement('div');
+    d.className='dd '+(done?'done':active?'active':'locked');
+    d.innerHTML='<span class="dn">'+(i+1)+'</span><span class="ds">'+(done?'✓':active?'▶':'🔒')+'</span>';
+    d.onclick=()=>setDay(i);
+    s.appendChild(d);
+  });
+  document.getElementById('dayTitle').textContent=DAYS[curDay].theme;
+}
+
+function setDay(i){
+  curDay=i;curWord=0;lineSt={};
+  stopMole();
+  renderDayStrip();
+  switchTab(curTab,true);
+}
+
+function renderWordCard(){
+  const d=curDay,W=DAYS[d].words,w=W[curWord],c=lc(d);
+  document.getElementById('progBar').style.width=(c/7*100)+'%';
+  document.getElementById('progTxt').textContent=c+' / 7';
+  const mi=c===0?0:c<=2?1:c<=4?2:c<=6?3:4;
+  document.getElementById('mascotMsg').innerHTML=MASCOT[mi];
+  const sr=document.getElementById('starRow');
+  sr.innerHTML='';
+  for(let i=0;i<7;i++){
+    const s=document.createElement('span');
+    s.className='star-i'+(i<c?' lit':'');
+    s.textContent='⭐';
+    sr.appendChild(s);
+  }
+  const dots=document.getElementById('navDots');
+  dots.innerHTML='';
+  W.forEach((_,i)=>{
+    const dot=document.createElement('div');
+    dot.className='nav-dot'+(i===curWord?' active':learned[d][i]?' learned':'');
+    dots.appendChild(dot);
+  });
+  document.getElementById('wEm').textContent=w.em;
+  document.getElementById('wEn').textContent=w.en;
+  document.getElementById('wZh').textContent=w.zh;
+  document.getElementById('wPh').textContent=w.ph;
+  const lrn=learned[d][curWord];
+  document.getElementById('wordCard').className='word-big-card'+(lrn?' learned':'');
+  const cb=document.getElementById('chkBtn');
+  cb.className='chk-big'+(lrn?' on':'');
+  cb.textContent=lrn?'✓ 學會了！':'✓ 學會了';
+  document.getElementById('doneBanner').className='done-banner'+(c===7?' show':'');
+}
+
+function prevWord(){curWord=(curWord-1+7)%7;renderWordCard();}
+function nextWord(){curWord=(curWord+1)%7;renderWordCard();}
+function toggleCur(){learned[curDay][curWord]=!learned[curDay][curWord];renderDayStrip();renderWordCard();}
+
+function switchTab(t,force){
+  if(t===curTab&&!force)return;
+  curTab=t;
+  [0,1,2].forEach(i=>{
+    document.getElementById('tab'+i).className=i===t?'':'hidden';
+    document.getElementById('tb'+i).className='tab'+(i===t?' active':'');
+  });
+  if(t===0)renderWordCard();
+  if(t===1){if(!lineSt.init)initLine();else renderLine();}
+  if(t===2)resetMole();
+}
+
+/* 連連看 */
+function initLine(){
+  const lo=[...Array(7).keys()].sort(()=>Math.random()-0.5);
+  const ro=[...Array(7).keys()].sort(()=>Math.random()-0.5);
+  lineSt={init:true,leftOrder:lo,rightOrder:ro,matched:new Set(),selLeft:null,selRight:null,lines:[]};
+  renderLine();
+}
+
+function renderLine(){
+  const W=DAYS[curDay].words;
+  document.getElementById('lineScore').textContent='配對 '+Math.round(lineSt.matched.size/2)+' / 7';
+  const left=document.getElementById('lineLeft'),right=document.getElementById('lineRight');
+  left.innerHTML='';right.innerHTML='';
+  lineSt.leftOrder.forEach(idx=>{
+    const w=W[idx],el=document.createElement('div');
+    const isM=lineSt.matched.has('L'+idx),isS=lineSt.selLeft===idx;
+    el.className='line-item em-item'+(isM?' matched':isS?' sel':'');
+    el.textContent=w.em;
+    if(!isM)el.onclick=()=>selectLine('L',idx);
+    left.appendChild(el);
+  });
+  lineSt.rightOrder.forEach(idx=>{
+    const w=W[idx],el=document.createElement('div');
+    const isM=lineSt.matched.has('R'+idx),isS=lineSt.selRight===idx;
+    el.className='line-item'+(isM?' matched':isS?' sel':'');
+    el.textContent=w.en;
+    if(!isM)el.onclick=()=>selectLine('R',idx);
+    right.appendChild(el);
+  });
+  setTimeout(drawLines,50);
+  document.getElementById('lineOk').className='line-ok'+(lineSt.matched.size===14?' show':'');
+}
+
+function selectLine(side,idx){
+  if(side==='L')lineSt.selLeft=idx;
+  else lineSt.selRight=idx;
+  if(lineSt.selLeft!==null&&lineSt.selRight!==null){
+    const l=lineSt.selLeft,r=lineSt.selRight;
+    lineSt.selLeft=null;lineSt.selRight=null;
+    if(l===r){
+      lineSt.matched.add('L'+l);lineSt.matched.add('R'+r);
+      lineSt.lines.push({idx:l});
+      speak(DAYS[curDay].words[l].en);
+      renderLine();
+    } else {
+      renderLine();
+      document.querySelectorAll('.line-item.sel').forEach(el=>el.classList.add('wrong'));
+      setTimeout(()=>renderLine(),650);
+    }
+    return;
+  }
+  renderLine();
+}
+
+function drawLines(){
+  const svg=document.getElementById('lineSvg');
+  svg.innerHTML='';
+  const game=document.getElementById('lineGame');
+  const gameRect=game.getBoundingClientRect();
+  lineSt.lines.forEach(({idx})=>{
+    const lPos=lineSt.leftOrder.indexOf(idx);
+    const rPos=lineSt.rightOrder.indexOf(idx);
+    const lEls=document.getElementById('lineLeft').children;
+    const rEls=document.getElementById('lineRight').children;
+    if(!lEls[lPos]||!rEls[rPos])return;
+    const lR=lEls[lPos].getBoundingClientRect();
+    const rR=rEls[rPos].getBoundingClientRect();
+    const x1=lR.right-gameRect.left,y1=lR.top+lR.height/2-gameRect.top;
+    const x2=rR.left-gameRect.left,y2=rR.top+rR.height/2-gameRect.top;
+    const line=document.createElementNS('http://www.w3.org/2000/svg','line');
+    line.setAttribute('x1',x1);line.setAttribute('y1',y1);
+    line.setAttribute('x2',x2);line.setAttribute('y2',y2);
+    line.setAttribute('stroke','#1d9e75');line.setAttribute('stroke-width','3');
+    line.setAttribute('stroke-linecap','round');
+    svg.appendChild(line);
+  });
+}
+
+function resetLine(){lineSt={};initLine();}
+
+/* 打地鼠 */
+function pickTarget(){
+  const W=DAYS[curDay].words;
+  moleTargetIdx=Math.floor(Math.random()*7);
+  const w=W[moleTargetIdx];
+  document.getElementById('moleTargetEm').textContent=w.em;
+  document.getElementById('moleTargetWord').textContent=w.en;
+  document.getElementById('moleTargetZh').textContent=w.zh;
+  speak(w.en);
+  renderMoleGrid();
+}
+
+function renderMoleGrid(){
+  const W=DAYS[curDay].words;
+  const grid=document.getElementById('moleGrid');
+  grid.innerHTML='';
+  const shuffled=[...Array(7).keys()].sort(()=>Math.random()-0.5);
+  const shown=shuffled.slice(0,6);
+  if(!shown.includes(moleTargetIdx))shown[Math.floor(Math.random()*6)]=moleTargetIdx;
+  shown.forEach(idx=>{
+    const w=W[idx];
+    const hole=document.createElement('div');
+    hole.className='mole-hole';
+    hole.innerHTML='<div class="mole-em">'+w.em+'</div><div class="mole-word">'+w.en+'</div>';
+    hole.onclick=()=>hitHole(idx,hole);
+    grid.appendChild(hole);
+  });
+}
+
+function hitHole(idx,hole){
+  if(!moleActive)return;
+  if(idx===moleTargetIdx){
+    moleScore++;
+    document.getElementById('moleScoreNum').textContent=moleScore;
+    hole.className='mole-hole hit';
+    hole.innerHTML='<div style="font-size:28px">✨</div>';
+    clearInterval(moleInterval);
+    setTimeout(()=>{
+      if(moleActive){pickTarget();moleInterval=setInterval(pickTarget,2800);}
+    },350);
+  } else {
+    moleScore=Math.max(0,moleScore-1);
+    document.getElementById('moleScoreNum').textContent=moleScore;
+    hole.className='mole-hole miss';
+    setTimeout(()=>{if(hole.parentNode)hole.className='mole-hole';},400);
+  }
+}
+
+function startMole(){
+  moleScore=0;moleActive=true;
+  document.getElementById('moleReady').classList.add('hidden');
+  document.getElementById('moleGame').classList.remove('hidden');
+  document.getElementById('moleResult').classList.add('hidden');
+  document.getElementById('moleScoreNum').textContent='0';
+  pickTarget();
+  moleInterval=setInterval(pickTarget,2800);
+  const startTime=Date.now();
+  tickInterval=setInterval(()=>{
+    const elapsed=Date.now()-startTime;
+    const pct=Math.max(0,100-elapsed/300);
+    document.getElementById('moleTimerFill').style.width=pct+'%';
+    if(elapsed>=30000){
+      stopMole();
+      document.getElementById('moleGame').classList.add('hidden');
+      document.getElementById('moleResult').classList.remove('hidden');
+      const s=moleScore;
+      document.getElementById('moleResultEm').textContent=s>=12?'🏆':s>=6?'🎉':'💪';
+      document.getElementById('moleResultScore').textContent=s+' 分！';
+      document.getElementById('moleResultMsg').textContent=s>=12?'超級厲害！你是打地鼠冠軍！':s>=6?'不錯喔！再練習會更強！':'繼續加油！下次一定更好！';
+    }
+  },100);
+}
+
+function stopMole(){
+  clearInterval(moleInterval);clearInterval(tickInterval);
+  moleActive=false;
+}
+
+function resetMole(){
+  stopMole();
+  document.getElementById('moleReady').classList.remove('hidden');
+  document.getElementById('moleGame').classList.add('hidden');
+  document.getElementById('moleResult').classList.add('hidden');
+}
+
+renderDayStrip();
+renderWordCard();
+</script>
+</body>
+</html>
